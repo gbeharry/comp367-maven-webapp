@@ -14,5 +14,6 @@
         String name = "Gabriel"; 
     %>
     <h1>Good <%= timeOfDay %>, <%= name %>, Welcome to COMP367</h1>
+	<h1>All is Good!</h1>
 </body>
 </html>
