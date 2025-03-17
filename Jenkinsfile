@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_CREDENTIALS_ID = 'dockerhub_id' 
-        DOCKER_IMAGE_NAME = 'yourdockerhubusername/maven-webapp' 
+        DOCKER_IMAGE_NAME = 'gabrielbeharry/maven-webapp' 
     }
 
     tools {
