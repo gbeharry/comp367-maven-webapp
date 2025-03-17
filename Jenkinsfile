@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_CREDENTIALS_ID = 'dockerhub_id' 
+        DOCKER_IMAGE_NAME = 'yourdockerhubusername/maven-webapp' 
+    }
+
     tools {
         maven 'Maven 3' 
         jdk 'JDK 21' 
@@ -17,7 +22,7 @@ pipeline {
             steps {
                 script {
                     echo "Building the Maven Web App..."
-                    bat 'mvn clean package'
+                    sh 'mvn clean package'
                 }
             }
         }
@@ -26,15 +31,46 @@ pipeline {
             steps {
                 script {
                     echo "Running unit tests..."
-                    bat 'mvn test'
+                    sh 'mvn test'
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Docker Login') {
             steps {
-                echo "Deploying application..."
-                
+                script {
+                    echo "Logging into Docker Hub..."
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    }
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                script {
+                    echo "Building Docker Image..."
+                    sh 'docker build -t $DOCKER_IMAGE_NAME .'
+                }
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                script {
+                    echo "Pushing Docker Image to Docker Hub..."
+                    sh 'docker push $DOCKER_IMAGE_NAME'
+                }
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    echo "Running Docker Container..."
+                    sh 'docker run -d -p 8080:8080 --name maven-webapp $DOCKER_IMAGE_NAME'
+                }
             }
         }
     }
