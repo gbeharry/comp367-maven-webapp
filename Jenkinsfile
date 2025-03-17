@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS_ID = 'dockerhub_id' 
-        DOCKER_IMAGE_NAME = 'gabrielbeharry/maven-webapp' 
+        DOCKER_CREDENTIALS_ID = 'dockerhub_id' // Matches the Jenkins credentials ID
+        DOCKER_IMAGE_NAME = 'gabrielbeharry/maven-webapp' // Your Docker Hub repository
     }
 
     tools {
@@ -22,7 +22,7 @@ pipeline {
             steps {
                 script {
                     echo "Building the Maven Web App..."
-                    sh 'mvn clean package'
+                    bat 'mvn clean package'
                 }
             }
         }
@@ -31,7 +31,7 @@ pipeline {
             steps {
                 script {
                     echo "Running unit tests..."
-                    sh 'mvn test'
+                    bat 'mvn test'
                 }
             }
         }
@@ -41,7 +41,7 @@ pipeline {
                 script {
                     echo "Logging into Docker Hub..."
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                        bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
                     }
                 }
             }
@@ -51,7 +51,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker Image..."
-                    sh 'docker build -t $DOCKER_IMAGE_NAME .'
+                    bat 'docker build -t %DOCKER_IMAGE_NAME% .'
                 }
             }
         }
@@ -60,7 +60,7 @@ pipeline {
             steps {
                 script {
                     echo "Pushing Docker Image to Docker Hub..."
-                    sh 'docker push $DOCKER_IMAGE_NAME'
+                    bat 'docker push %DOCKER_IMAGE_NAME%'
                 }
             }
         }
@@ -69,13 +69,13 @@ pipeline {
             steps {
                 script {
                     echo "Running Docker Container..."
-                    sh 'docker run -d -p 8080:8080 --name maven-webapp $DOCKER_IMAGE_NAME'
+                    bat 'docker run -d -p 8080:8080 --name maven-webapp %DOCKER_IMAGE_NAME%'
                 }
             }
         }
     }
 
     triggers {
-        pollSCM('H/5 * * * *')
+        pollSCM('H/5 * * * *') // Check for new commits every 5 minutes
     }
 }
